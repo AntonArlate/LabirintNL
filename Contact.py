@@ -387,6 +387,8 @@ canvas.bind_all("<KeyPress-Right>",function)
 canvas.bind_all("<KeyPress-Up>",function)
 canvas.bind_all("<KeyPress-Down>",function)
 
+tk.mainloop()
+
 
 ##def main(): 
 ##   
