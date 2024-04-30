@@ -9,14 +9,14 @@ import numpy as np
 class Layer:
     def __init__(self, N, bias=False):
         self.N = N
-        self.Out = np.zeros(N)
+        self.Out = np.zeros((1, N))
         self.In = np.zeros(N)
         self.E_In = np.zeros(N)
         self.E_Out = np.zeros(N)
         self.bias = bias
         if bias:
-            self.b = np.zeros(N)
-            self.E_b = np.random.uniform(-1, 1, N)
+            self.b = np.zeros((1, N))
+            self.E_b = np.zeros((1, N))
             self.bias_value = True
         else:
             self.bias_value = False
@@ -67,7 +67,9 @@ def predict_full(network):
         layer.In = layer.prev_layer.Out @ layer.w + layer.b
         layer.Out = relu(layer.In)
         i += 1
-    z = softmax(network[i - 1].In)
+    # z = softmax(network[i - 1].In)
+    # отключаем нормализацию, теперь получаем чистые значения
+    z = network[i - 1].In
     return z
     
 
@@ -89,7 +91,9 @@ class Backward:
         # далее запуск обучения выглядит следующим образом
         # w{i} = w{i} - ALPHA * dE|dw{i} ; ALPHA - коофициент обучения
 
-        LEARNING_RATE = 0.001
+
+
+        LEARNING_RATE = 0.1
 
         layer.E_w = layer.prev_layer.Out.T @ layer.E_Out
         layer.E_b = layer.E_Out
@@ -113,13 +117,24 @@ class ErrorGenerator:
         self.prev_predict = -1 # предсказание на предыдущем шаге
         self.prev_vecc = 0
         self.vecctor_error = 0
+        self.prev_choise = -1
 
-    def calculate(self, vecctor, choise):
+    def calculate(self, vecctor, choise, env_reward):
         if (self.prev_predict == -1):
-            self.prev_predict = vecctor[choise]
+            self.prev_predict = vecctor[0, choise]
+            self.prev_choise = choise
             self.prev_vecc = vecctor
 
-        self.vecctor_error = vecctor - self.prev_vecc # тут мы получим dE|dt для выходного слоя
+        # self.vecctor_error = vecctor - self.prev_vecc 
+        self.vecctor_error = self.prev_vecc - self.prev_vecc # так мы зануляем вектор
+        self.vecctor_error[0, self.prev_choise] = env_reward - self.prev_predict
+
+        # записываем шаг
+        self.prev_predict = vecctor[0, choise]
+        self.prev_choise = choise
+        self.prev_vecc = vecctor
+        
+        # тут мы получим dE|dt для выходного слоя
         return self.vecctor_error
             
             # error = vecctor[choise] - self.prev_predict # возможно наоборот
@@ -152,8 +167,8 @@ if __name__ == '__main__':
                 network[i-1].set_next_layer(network[i])
         return network
 
-    net_scheme = [4, 3, 5]
-    bias_scheme = [False, True, True]
+    net_scheme = [4, 3, 3, 4]
+    bias_scheme = [False, True, True, True]
     network = network_init(net_scheme, bias_scheme)
     INPUT_DIM = network[0].N # количество входных значений
     OUT_DIM = network[2].N # количество вsходных значений
@@ -164,7 +179,7 @@ if __name__ == '__main__':
     previous_step = 0
 
     x = np.random.randn(INPUT_DIM) # Входящий вектор, пока задаётся случайными значениям т.е. массив x(INPUT_DIM)
-    network[0].Out = np.random.randn(len(network[0].Out))
+    network[0].Out = np.random.randn(*network[0].Out.shape)
     x = network[0].Out
 
     w1 = np.random.randn(INPUT_DIM, H_DIM) # Матрица весов от одного слоя к другому
@@ -177,11 +192,11 @@ if __name__ == '__main__':
     b2 = np.random.randn(OUT_DIM)
     b2 = network[2].b
 
-for i in range(1, 6):
+for i in range(1, 6000):
     print("Итерация", i)
-    time.sleep(1)
+    time.sleep(0.1)
     #* Нейросеть считает ожидаемую награду за действия и выбирает необходимое. 
-    predicted_rewards = predict(x)
+    # predicted_rewards = predict(x)
     # теперь x это выход слоя 0 но также мы теперь можем передать всю сеть, а функция разберётся
     predicted_rewards = predict_full(network)
     # На выходных нейронах мы будем получать рассчитаную награду за действия
@@ -193,15 +208,22 @@ for i in range(1, 6):
     #* Среда выполняет действие.
     # x = np.random.randn(INPUT_DIM)
     # network[0].Out = np.random.randn(INPUT_DIM)
-    # для теста вход одинаковый
+    # Симулируем награду от среды, так чтобы нейронка двигалась всегда по индексу 2 (выдавала число 3)
+    environment_reward = 0
+    if choise == 3:
+        environment_reward = 1
+    else:
+        environment_reward = -1
+
 
     #* Отправляем задачу в модуль вычисления ошибки. У нас есть текущий вектор решений и выбор. Их и будем передавать
     # error = err_gen.calculate(predicted_rewards, choise)
-    dE_dt2 = err_gen.calculate(predicted_rewards, choise) # получили вектор выхода ошибок для слоя OUT
+    dE_dt2 = err_gen.calculate(predicted_rewards, choise, environment_reward) # получили вектор выхода ошибок для слоя OUT
     
     network[len(network)-1].E_Out = dE_dt2
     
     print('errors:', dE_dt2)
+    print('out:', network[2].w)
 
     #* Запускаем обучение
     backward.full_net(network)
