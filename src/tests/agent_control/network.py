@@ -77,8 +77,6 @@ def predict_full(network):
 # Модуль отвечающий за обучение. Должен принять вектор ошибок и выполнить обучение
 
 class Backward:
-    def __init__(self, learning_rate = 0.01):
-        self.LEARNING_RATE = learning_rate
     def one_lay(self, layer: Layer):
         # Потребуется для каждого слоя:
         # {i} буду отмечать как индекс слоя
@@ -91,13 +89,17 @@ class Backward:
         # далее запуск обучения выглядит следующим образом
         # w{i} = w{i} - ALPHA * dE|dw{i} ; ALPHA - коофициент обучения
 
+
+
+        LEARNING_RATE = 0.01
+
         layer.E_w = layer.prev_layer.Out.T @ layer.E_Out
         layer.E_b = layer.E_Out
         layer.prev_layer.E_In = layer.E_Out @ layer.w.T
         layer.prev_layer.E_Out = layer.prev_layer.E_In * deriv_relu(layer.prev_layer.In)
 
-        layer.w = layer.w - self.LEARNING_RATE * layer.E_w
-        layer.b = layer.b - self.LEARNING_RATE * layer.E_b
+        layer.w = layer.w - LEARNING_RATE * layer.E_w
+        layer.b = layer.b - LEARNING_RATE * layer.E_b
 
     def full_net(self, network: list[Layer]):
         layer = network[len(network)-1]
@@ -154,19 +156,19 @@ class ErrorGenerator:
     # можно будет допустим потом нормализовать при помощи к примеру функции активации
 
 
-if __name__ == '__main__':
-   
-    # Попробуем инициализировать сеть при помощи класса. Передаём схему в виде массива
-    def network_init(net_scheme, bias_scheme):
-        network: list[Layer] = []
-        for N_in_layer, bias_in_layer in zip(net_scheme, bias_scheme):
-            new_layer = Layer(N_in_layer, bias_in_layer)    
-            network.append(new_layer)
-            i = network.index(new_layer)
-            if i != 0:
-                network[i].set_prev_layer(network[i-1])
-                network[i-1].set_next_layer(network[i])
-        return network
+# Попробуем инициализировать сеть при помощи класса. Передаём схему в виде массива
+def network_init(net_scheme, bias_scheme):
+    network: list[Layer] = []
+    for N_in_layer, bias_in_layer in zip(net_scheme, bias_scheme):
+        new_layer = Layer(N_in_layer, bias_in_layer)    
+        network.append(new_layer)
+        i = network.index(new_layer)
+        if i != 0:
+            network[i].set_prev_layer(network[i-1])
+            network[i-1].set_next_layer(network[i])
+    return network
+
+if __name__ == '__main__':   
 
     net_scheme = [4, 3, 3, 4]
     bias_scheme = [False, True, True, True]
