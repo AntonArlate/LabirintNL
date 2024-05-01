@@ -1,3 +1,6 @@
 *.code-profile
 *.idea
 *myenv
+
+src/labyrinth/LabirintNL.py
+*__pycache__
