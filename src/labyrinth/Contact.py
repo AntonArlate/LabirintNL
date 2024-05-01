@@ -226,6 +226,12 @@ class MyObject:
                             self.canvas.coords(self.oval)[1]+self.scale/2+y,walls):
             self.canvas.move(self.oval,x,y)
 
+    def getCoords (self):
+        x1, y1, x2, y2 = self.canvas.coords(self.oval)
+        center_x = (x1 + x2) / 2
+        center_y = (y1 + y2) / 2
+        return center_x, center_y
+
 
 
 class Room:
