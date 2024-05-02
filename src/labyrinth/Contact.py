@@ -231,6 +231,14 @@ class MyObject:
         center_x = (x1 + x2) / 2
         center_y = (y1 + y2) / 2
         return center_x, center_y
+    
+    def setCoords (self, center_x, center_y):
+        new_x1 = center_x - self.scale / 2
+        new_y1 = center_y - self.scale / 2
+        new_x2 = center_x + self.scale / 2
+        new_y2 = center_y + self.scale / 2
+
+        self.canvas.coords(self.oval, new_x1, new_y1, new_x2, new_y2)
 
 
 

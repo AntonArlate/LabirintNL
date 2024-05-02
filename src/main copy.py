@@ -6,9 +6,9 @@ import numpy as np
 # Импортируем нейросеть
 import agent_control.network as nl
 # Инициализируем нейросеть
-net_scheme = [4, 100, 100, 4] # схема нейронной сети
-bias_scheme = [False, True, True, True] # схема нейронов смещения
-learning_rate = 0.001 # Коеффициент обучения
+net_scheme = [2, 3, 2] # схема нейронной сети
+bias_scheme = [False, False, False] # схема нейронов смещения
+learning_rate = 0.3 # Коеффициент обучения
 network = nl.network_init(net_scheme, bias_scheme)
 err_gen = nl.ErrorGenerator() # Генератор ошибок, то что будет обучать агента
 backward = nl.Backward(learning_rate) # модуль обратного распространения и обучения
@@ -35,27 +35,19 @@ def second_cycle():
     # В начале нам надо собрать данные
     target_coordinates = (388.0, 458.0)
     current_coordinates = labyrinth.obj.getCoords()
-
-    x_diff = target_coordinates[0] - current_coordinates[0]
-    y_diff = target_coordinates[1] - current_coordinates[1]
-    distance = math.sqrt(x_diff**2 + y_diff**2)
-    reward = 1 / (abs(distance) + 1)
-    
-    print(reward)
+    current_coordinates = tuple((current_coordinates[0] / 600, current_coordinates[1] / 600))
 
     # передаём в нейросеть данные
-    incoming_data = np.hstack((np.array(target_coordinates), np.array(current_coordinates))).reshape(1, -1)
+    incoming_data = np.hstack((np.array(current_coordinates))).reshape(1, -1)
     network[0].Out = incoming_data
     # передаём данные на решение неейросети
     predicted_rewards = forward(network)
-    # обращаемся к дополнительному модулю для трансфера ответа нейросети в нажатие кннопки.
-    choise, key_symbol = trascriptAnswer(predicted_rewards)
     # Отправляем задачу в модуль вычисления ошибки. 
-    network[len(network)-1].E_Out = err_gen.calculate(predicted_rewards, choise, reward) 
+    network[len(network)-1].E_Out = (np.array([[predicted_rewards[0,0]-0.8],[predicted_rewards[0,1]-0.5]])).T
     # Запускаем обучение
     backward.full_net(network)
     # Среда выполняет действие
-    labyrinth.canvas.event_generate(f"<KeyPress-{key_symbol}>")
+    labyrinth.obj.setCoords(predicted_rewards[0,0] * 600, predicted_rewards[0,1] * 600)
 
     if target_coordinates == current_coordinates: 
         print('!!!DONE!!!')

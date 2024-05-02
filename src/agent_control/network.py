@@ -12,9 +12,10 @@ class Layer:
         self.E_In = np.zeros(N)
         self.E_Out = np.zeros(N)
         self.bias = bias
+        # генерация смещения пока зафиксирована
+        self.b = np.zeros((1, N))
+        self.E_b = np.zeros((1, N))
         if bias:
-            self.b = np.zeros((1, N))
-            self.E_b = np.zeros((1, N))
             self.bias_value = True
         else:
             self.bias_value = False
@@ -92,6 +93,8 @@ class Backward:
         # далее запуск обучения выглядит следующим образом
         # w{i} = w{i} - ALPHA * dE|dw{i} ; ALPHA - коофициент обучения
 
+        print(layer.prev_layer.Out)
+        print(layer.E_Out)
         layer.E_w = layer.prev_layer.Out.T @ layer.E_Out
         layer.E_b = layer.E_Out
         layer.prev_layer.E_In = layer.E_Out @ layer.w.T
