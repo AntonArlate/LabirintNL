@@ -71,7 +71,33 @@ def predict_full(network):
     z = network[i - 1].In
     return z
     
-
+def normalize_data(X):
+    """
+    Нормализация входного вектора или матрицы данных X.
+    
+    Параметры:
+    X (numpy.array) - входной вектор или матрица данных, которые нужно нормализовать
+    
+    Возвращает:
+    numpy.array - нормализованный вектор или матрица данных
+    """
+    
+    if len(X.shape) == 1:  # Если X - вектор
+        means = np.mean(X)
+        stds = np.std(X)
+        
+        # Добавляем небольшую константу к знаменателю, чтобы избежать деления на ноль
+        epsilon = 1e-8
+        X_normalized = (X - means) / (stds + epsilon)
+    else:  # Если X - матрица
+        means = np.mean(X, axis=0)
+        stds = np.std(X, axis=0)
+        
+        # Добавляем небольшую константу к знаменателю, чтобы избежать деления на ноль
+        epsilon = 1e-8
+        X_normalized = (X - means) / (stds + epsilon)
+    
+    return X_normalized
 
 
 # -------
@@ -134,13 +160,13 @@ class ErrorGenerator:
         # self.vecctor_error[0, self.prev_choise] = self.prev_predict - env_reward
         # сравниваем текущую награду и предыдущую если увеличивается то подаётся отрицательный результат
         result = self.prev_reward - env_reward
-        print('result: ', result)
+        # print('result: ', result)
         if result == 0:
             self.vecctor_error[0, self.prev_choise] = 0.001
         else: 
             self.vecctor_error[0, self.prev_choise] = result
 
-        self.vecctor_error = self.vecctor_error - 0.0001
+        self.vecctor_error = self.vecctor_error
 
         # записываем шаг
         self.prev_predict = vecctor[0, choise]

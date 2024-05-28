@@ -232,7 +232,13 @@ class MyObject:
         center_y = (y1 + y2) / 2
         return center_x, center_y
 
+    def setCoords (self, center_x, center_y):
+        new_x1 = center_x - self.scale / 2
+        new_y1 = center_y - self.scale / 2
+        new_x2 = center_x + self.scale / 2
+        new_y2 = center_y + self.scale / 2
 
+        self.canvas.coords(self.oval, new_x1, new_y1, new_x2, new_y2)
 
 class Room:
     ref_points=[]
@@ -373,26 +379,33 @@ class Room:
 def function(event):
     step=4
     if event.keysym=="Up":
-        print("UP")
+        # print("UP")
         obj.move(0,-step,room.walls)
     elif event.keysym=="Down":
-        print("DOWN")
+        # print("DOWN")
         obj.move(0,step,room.walls)
     elif event.keysym=="Right":
-        print("RIGHT")
+        # print("RIGHT")
         obj.move(step,0,room.walls)
     elif event.keysym=="Left":
-        print("LEFT")
+        # print("LEFT")
         obj.move(-step,0,room.walls)
 
 room=Room(30,30,500,500,5,50,canvas)
 obj=MyObject(250,100,20,"blue",canvas)
 
+# Функция, которая вызывается при нажатии клавиши "R"
+def set_random_coords(event):
+    new_x = random.randint(0+100, m_width-100)
+    new_y = random.randint(0+100, m_height-100)
+    obj.setCoords(new_x, new_y)
         
 canvas.bind_all("<KeyPress-Left>",function)
 canvas.bind_all("<KeyPress-Right>",function)
 canvas.bind_all("<KeyPress-Up>",function)
 canvas.bind_all("<KeyPress-Down>",function)
+# Привязка функции к нажатию клавиши "R"
+tk.bind("<KeyPress-r>", set_random_coords)
 
 if __name__ == '__main__':
     tk.mainloop()
