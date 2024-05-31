@@ -10,7 +10,7 @@ class Layer:
         self.Out = np.zeros((1, N))
         self.In = np.zeros(N)
         self.E_In = np.zeros(N)
-        self.E_Out = np.zeros(N)
+        self.E_Out = np.zeros((1, N))
         self.bias = bias
         if bias:
             self.b = np.zeros((1, N))
@@ -35,14 +35,11 @@ class Layer:
 
 
 def relu(t):
-    a = -0.01
-    x = np.maximum(t, 0)
-    x[x == 0] = a * t[x == 0]
+    x = np.where(t >= 0, t, 0)
     return x # Всё также используется numpy которая получая вектор, вернёт также вектор
 
 def deriv_relu(t):
-    a = -0.1
-    x = np.where(t > 0, 1, a)
+    x = np.where(t >= 0, 1, 0.01)
     return x
 
 
@@ -66,9 +63,10 @@ def predict_full(network):
         layer.In = layer.prev_layer.Out @ layer.w + layer.b
         layer.Out = relu(layer.In)
         i += 1
-    # z = softmax(network[i - 1].In)
+    z = softmax(network[i - 1].In)
     # отключаем нормализацию, теперь получаем чистые значения
-    z = network[i - 1].In
+    # z = network[i - 1].In
+    network[i - 1].Out = z
     return z
     
 def normalize_data(X):
